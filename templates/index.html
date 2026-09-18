@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="page-container">
+        <section class="registration-card" aria-labelledby="form-title">
+            <header class="card-header">
+                <div class="badge">Portal</div>
+                <h1 id="form-title">Student Registration</h1>
+                <p class="description">
+                    Please complete the form below to register a new student. All fields are required.
+                </p>
+            </header>
+
+            <form class="registration-form" action="/register" method="POST" enctype="multipart/form-data" novalidate>
+                <!-- Full Name Field -->
+                <div class="form-group">
+                    <label for="name">
+                        Full Name <span class="required-indicator" aria-hidden="true">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        placeholder="e.g., Alex Morgan" 
+                        required 
+                        autocomplete="name"
+                        aria-describedby="name-hint"
+                    >
+                    <small id="name-hint" class="hint-text">Enter the student's legal first and last name.</small>
+                </div>
+
+                <!-- Email Address Field -->
+                <div class="form-group">
+                    <label for="email">
+                        Email Address <span class="required-indicator" aria-hidden="true">*</span>
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="e.g., alex.morgan@example.com" 
+                        required 
+                        autocomplete="email"
+                        aria-describedby="email-hint"
+                    >
+                    <small id="email-hint" class="hint-text">Official student email for university communication.</small>
+                </div>
+
+                <!-- Course Selection Field -->
+                <div class="form-group">
+                    <label for="course">
+                        Course <span class="required-indicator" aria-hidden="true">*</span>
+                    </label>
+                    <div class="select-wrapper">
+                        <select id="course" name="course" required aria-describedby="course-hint">
+                            <option value="" disabled selected>Select an enrolled course</option>
+                            <option value="Cloud Computing Architecture">Cloud Computing Architecture</option>
+                            <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                            <option value="Data Science & Machine Learning">Data Science & Machine Learning</option>
+                            <option value="Cybersecurity & Network Defense">Cybersecurity & Network Defense</option>
+                            <option value="Software Engineering">Software Engineering</option>
+                            <option value="DevOps & Site Reliability">DevOps & Site Reliability</option>
+                        </select>
+                    </div>
+                    <small id="course-hint" class="hint-text">Select the primary academic program.</small>
+                </div>
+
+                <!-- Student Photo Upload Field -->
+                <div class="form-group">
+                    <label for="photo">
+                        Student Photo <span class="required-indicator" aria-hidden="true">*</span>
+                    </label>
+                    <div class="file-upload-container" id="drop-zone">
+                        <input 
+                            type="file" 
+                            id="photo" 
+                            name="photo" 
+                            accept="image/*" 
+                            required 
+                            class="file-input"
+                            aria-describedby="photo-hint"
+                        >
+                        <label for="photo" class="file-upload-label">
+                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <span class="upload-text" id="upload-text-prompt">Choose an image file or drag here</span>
+                            <span class="upload-subtext">JPG, PNG, or WEBP (Max 5MB)</span>
+                        </label>
+                    </div>
+                    <div id="file-preview-container" class="file-preview-container hidden" aria-live="polite">
+                        <img id="photo-preview" src="#" alt="Selected student photo preview" class="photo-preview-img">
+                        <div class="preview-details">
+                            <span id="preview-filename" class="preview-filename"></span>
+                            <button type="button" id="remove-photo-btn" class="remove-btn" aria-label="Remove selected photo">Remove</button>
+                        </div>
+                    </div>
+                    <small id="photo-hint" class="hint-text">Upload a passport-style portrait photo for the student ID badge.</small>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-actions">
+                    <button type="submit" id="submit-btn" class="submit-btn">
+                        <span>Register Student</span>
+                        <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

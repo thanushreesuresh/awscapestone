@@ -1,0 +1,417 @@
+/* ==========================================================================
+   Design Tokens & System Variables
+   ========================================================================== */
+:root {
+    --color-bg: #f8fafc;
+    --color-card-bg: #ffffff;
+    --color-text-primary: #0f172a;
+    --color-text-secondary: #475569;
+    --color-text-muted: #64748b;
+    
+    --color-primary: #2563eb;
+    --color-primary-hover: #1d4ed8;
+    --color-primary-active: #1e40af;
+    --color-primary-light: #eff6ff;
+    --color-primary-border: #bfdbfe;
+
+    --color-border: #cbd5e1;
+    --color-border-hover: #94a3b8;
+    --color-input-bg: #ffffff;
+
+    --color-error: #dc2626;
+    --color-error-bg: #fef2f2;
+    --color-error-border: #fca5a5;
+
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-full: 9999px;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07);
+
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --transition-fast: 150ms ease-in-out;
+}
+
+/* ==========================================================================
+   CSS Reset & Base Setup
+   ========================================================================== */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==========================================================================
+   Layout Containers
+   ========================================================================== */
+.page-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1rem;
+}
+
+.registration-card {
+    background-color: var(--color-card-bg);
+    width: 100%;
+    max-width: 540px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid #e2e8f0;
+    padding: 2.5rem;
+    transition: box-shadow var(--transition-fast);
+}
+
+/* ==========================================================================
+   Header & Typography
+   ========================================================================== */
+.card-header {
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-primary);
+    background-color: var(--color-primary-light);
+    border-radius: var(--radius-full);
+    margin-bottom: 0.75rem;
+}
+
+.card-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.025em;
+    margin-bottom: 0.5rem;
+}
+
+.card-header .description {
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary);
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   Form Components
+   ========================================================================== */
+.registration-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-group label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.required-indicator {
+    color: var(--color-error);
+    margin-left: 0.15rem;
+}
+
+/* Text, Email, and Select Controls */
+input[type="text"],
+input[type="email"],
+select {
+    width: 100%;
+    height: 2.75rem;
+    padding: 0 0.875rem;
+    font-size: 0.9375rem;
+    font-family: inherit;
+    color: var(--color-text-primary);
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input[type="text"]::placeholder,
+input[type="email"]::placeholder {
+    color: #94a3b8;
+}
+
+input[type="text"]:hover,
+input[type="email"]:hover,
+select:hover {
+    border-color: var(--color-border-hover);
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* Select wrapper styling */
+.select-wrapper {
+    position: relative;
+}
+
+.select-wrapper select {
+    appearance: none;
+    padding-right: 2.5rem;
+    cursor: pointer;
+}
+
+.select-wrapper::after {
+    content: "";
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0.5rem;
+    height: 0.5rem;
+    border-right: 2px solid var(--color-text-secondary);
+    border-bottom: 2px solid var(--color-text-secondary);
+    pointer-events: none;
+    transform: translateY(-70%) rotate(45deg);
+}
+
+/* Hint Text */
+.hint-text {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+/* Field error state */
+.form-group.has-error input,
+.form-group.has-error select {
+    border-color: var(--color-error);
+    background-color: var(--color-error-bg);
+}
+
+.form-group.has-error .error-message {
+    font-size: 0.75rem;
+    color: var(--color-error);
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   File Upload Area
+   ========================================================================== */
+.file-upload-container {
+    position: relative;
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: #fafbfc;
+    transition: all var(--transition-fast);
+    text-align: center;
+}
+
+.file-upload-container:hover,
+.file-upload-container.drag-over {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-light);
+}
+
+.file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.file-input:focus + .file-upload-label {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.file-upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.75rem 1rem;
+    cursor: pointer;
+}
+
+.upload-icon {
+    width: 2rem;
+    height: 2rem;
+    color: var(--color-primary);
+    margin-bottom: 0.5rem;
+}
+
+.upload-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.upload-subtext {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+/* Preview Box */
+.file-preview-container {
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.625rem 0.875rem;
+    background-color: #f1f5f9;
+    border-radius: var(--radius-md);
+    border: 1px solid #e2e8f0;
+}
+
+.photo-preview-img {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    border: 1px solid var(--color-border);
+}
+
+.preview-details {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+.preview-filename {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 0.5rem;
+}
+
+.remove-btn {
+    background: none;
+    border: none;
+    color: var(--color-error);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast);
+}
+
+.remove-btn:hover {
+    background-color: #fee2e2;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ==========================================================================
+   Submit Button & Form Actions
+   ========================================================================== */
+.form-actions {
+    margin-top: 0.75rem;
+}
+
+.submit-btn {
+    width: 100%;
+    height: 3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background-color: var(--color-primary);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: background-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.submit-btn:hover {
+    background-color: var(--color-primary-hover);
+    box-shadow: var(--shadow-md);
+}
+
+.submit-btn:active {
+    background-color: var(--color-primary-active);
+    transform: translateY(1px);
+}
+
+.submit-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.btn-arrow {
+    width: 1.125rem;
+    height: 1.125rem;
+    transition: transform var(--transition-fast);
+}
+
+.submit-btn:hover .btn-arrow {
+    transform: translateX(3px);
+}
+
+/* ==========================================================================
+   Responsive Adaptations
+   ========================================================================== */
+@media (max-width: 640px) {
+    .page-container {
+        padding: 1.25rem 1rem;
+    }
+
+    .registration-card {
+        padding: 1.5rem;
+        border-radius: var(--radius-md);
+    }
+
+    .card-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .card-header .description {
+        font-size: 0.875rem;
+    }
+
+    .submit-btn {
+        height: 2.75rem;
+        font-size: 0.9375rem;
+    }
+}
