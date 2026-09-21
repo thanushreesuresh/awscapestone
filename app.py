@@ -1,21 +1,56 @@
 import os
 import re
+import uuid
+import boto3
+import pymysql
+from dotenv import load_dotenv
 from flask import Flask, render_template, render_template_string, request
 from werkzeug.utils import secure_filename
 
+# Load environment variables from .env
+load_dotenv()
+
 app = Flask(__name__)
+
+# ---------------------------------------------------------
+# Database Configuration (Local MySQL)
+# ---------------------------------------------------------
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_USER = os.getenv('DB_USER', 'root')
+DB_PASSWORD = os.getenv('DB_PASSWORD', '')
+DB_NAME = os.getenv('DB_NAME', 'studentdb')
+
+# ---------------------------------------------------------
+# AWS S3 Configuration
+# Uses default credential provider chain (IAM role, env vars, or AWS config)
+# ---------------------------------------------------------
+S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
+AWS_REGION = os.getenv('AWS_REGION')
+
+s3_client = boto3.client('s3', region_name=AWS_REGION)
 
 # Upload settings
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5 MB max file size
 
-# Success response template for frontend verification stage
+def get_db_connection():
+    """Establishes and returns a connection to the MySQL database."""
+    return pymysql.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        cursorclass=pymysql.cursors.DictCursor,
+        autocommit=True
+    )
+
+# Success response template
 SUCCESS_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registration Received</title>
+    <title>Registration Successful</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,14 +60,18 @@ SUCCESS_TEMPLATE = """<!DOCTYPE html>
     <main class="page-container">
         <section class="registration-card" aria-labelledby="confirmation-title">
             <header class="card-header">
-                <div class="badge" style="background-color: #ecfdf5; color: #059669;">Backend Verified</div>
-                <h1 id="confirmation-title">Registration Received</h1>
+                <div class="badge" style="background-color: #ecfdf5; color: #059669;">Saved to S3 &amp; MySQL</div>
+                <h1 id="confirmation-title">Registration Successful</h1>
                 <p class="description">
-                    Flask backend successfully received and validated the student submission.
+                    Student registration record has been successfully persisted with photo stored in Amazon S3.
                 </p>
             </header>
 
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 0.85rem;">
+                <div>
+                    <span style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Student ID</span>
+                    <p style="font-size: 1rem; font-weight: 600; color: #0f172a; margin-top: 0.2rem;">#{{ student_id }}</p>
+                </div>
                 <div>
                     <span style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Student Name</span>
                     <p style="font-size: 1rem; font-weight: 600; color: #0f172a; margin-top: 0.2rem;">{{ name }}</p>
@@ -46,13 +85,13 @@ SUCCESS_TEMPLATE = """<!DOCTYPE html>
                     <p style="font-size: 1rem; font-weight: 600; color: #0f172a; margin-top: 0.2rem;">{{ course }}</p>
                 </div>
                 <div>
-                    <span style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Photo Filename</span>
-                    <p style="font-size: 1rem; font-weight: 600; color: #0f172a; margin-top: 0.2rem;">{{ filename }}</p>
+                    <span style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">S3 Photo Location</span>
+                    <p style="font-size: 0.875rem; font-weight: 500; color: #0f172a; margin-top: 0.2rem; word-break: break-all;">{{ photo_url }}</p>
                 </div>
             </div>
 
             <div style="padding: 0.85rem 1rem; background: #eff6ff; border-left: 4px solid #2563eb; border-radius: 4px; margin-bottom: 1.5rem; font-size: 0.875rem; color: #1e40af; line-height: 1.4;">
-                <strong>Notice:</strong> This is a temporary verification step. Database (MySQL / RDS) and photo storage (Amazon S3) will be integrated in future phases.
+                <strong>Integration Status:</strong> Photo uploaded to Amazon S3 (<code>{{ bucket_name }}</code>) and record saved to MySQL (<code>{{ db_name }}.students</code>).
             </div>
 
             <a href="/" class="submit-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">
@@ -64,7 +103,7 @@ SUCCESS_TEMPLATE = """<!DOCTYPE html>
 </html>
 """
 
-# Error response template for invalid form submission
+# Error response template for invalid form submission, S3 failures, or database errors
 ERROR_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -80,10 +119,10 @@ ERROR_TEMPLATE = """<!DOCTYPE html>
     <main class="page-container">
         <section class="registration-card" aria-labelledby="error-title">
             <header class="card-header">
-                <div class="badge" style="background-color: #fef2f2; color: #dc2626;">Validation Error</div>
+                <div class="badge" style="background-color: #fef2f2; color: #dc2626;">Error</div>
                 <h1 id="error-title">Submission Failed</h1>
                 <p class="description">
-                    The registration request could not be processed due to the following errors:
+                    The registration request could not be processed:
                 </p>
             </header>
 
@@ -121,8 +160,9 @@ def index():
 @app.route('/register', methods=['POST'])
 def register():
     """
-    Receives and validates the submitted student registration form.
-    Validates name, email, course, and photo upload without persisting to database or S3.
+    Receives and validates the submitted student registration form,
+    uploads the photo to Amazon S3 using boto3, and inserts the record
+    into MySQL studentdb.students.
     """
     errors = []
 
@@ -158,16 +198,73 @@ def register():
     if errors:
         return render_template_string(ERROR_TEMPLATE, errors=errors), 400
 
-    # Sanitize the filename for safe display
-    safe_filename = secure_filename(photo.filename)
+    # 7. Upload photo to Amazon S3
+    if not S3_BUCKET_NAME:
+        app.logger.error("S3 upload failed: S3_BUCKET_NAME environment variable is not configured.")
+        return render_template_string(
+            ERROR_TEMPLATE,
+            errors=["Storage service is not configured. Please configure S3_BUCKET_NAME."]
+        ), 500
 
-    # Temporary success confirmation (no persistence to MySQL or S3 in this stage)
+    safe_filename = secure_filename(photo.filename)
+    unique_key = f"uploads/{uuid.uuid4().hex}_{safe_filename}"
+
+    try:
+        photo.seek(0)
+        extra_args = {}
+        if photo.content_type:
+            extra_args['ContentType'] = photo.content_type
+
+        s3_client.upload_fileobj(
+            photo,
+            S3_BUCKET_NAME,
+            unique_key,
+            ExtraArgs=extra_args if extra_args else None
+        )
+
+        # Build S3 reference URL
+        if AWS_REGION:
+            photo_url = f"https://{S3_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/{unique_key}"
+        else:
+            photo_url = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{unique_key}"
+
+    except Exception as e:
+        # Handle S3 errors safely without exposing AWS credentials or internal details
+        app.logger.error("S3 upload failed: %s", type(e).__name__)
+        return render_template_string(
+            ERROR_TEMPLATE,
+            errors=["A storage error occurred while uploading the photo. Please try again later."]
+        ), 500
+
+    # 8. Insert record into MySQL (only after successful S3 upload)
+    try:
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            insert_sql = """
+            INSERT INTO students (name, email, course, photo_url)
+            VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(insert_sql, (name.strip(), email.strip(), course.strip(), photo_url))
+            student_id = cursor.lastrowid
+        connection.close()
+    except Exception as e:
+        # Handle database errors safely without exposing passwords or credentials
+        app.logger.error("Database insertion failed: %s", type(e).__name__)
+        return render_template_string(
+            ERROR_TEMPLATE,
+            errors=["A database error occurred while saving your registration. Please try again later."]
+        ), 500
+
+    # Render confirmation page with inserted record details
     return render_template_string(
         SUCCESS_TEMPLATE,
+        student_id=student_id,
         name=name.strip(),
         email=email.strip(),
         course=course.strip(),
-        filename=safe_filename
+        photo_url=photo_url,
+        bucket_name=S3_BUCKET_NAME,
+        db_name=DB_NAME
     ), 200
 
 if __name__ == '__main__':
